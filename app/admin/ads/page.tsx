@@ -1,4 +1,4 @@
-'use client'
+handleToggle'use client'
 
 import { useState, useEffect } from 'react'
 import {
@@ -67,13 +67,18 @@ export default function AdminAdsPage() {
   const totalClicks = ads.reduce((s, a) => s + a.clicks, 0)
   const avgCTR = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0'
 
-  const handleToggle = async (ad: Ad) => {
+ const handleToggle = async (ad: Ad) => {
     const { error } = await supabase
       .from('ad_placements')
-      .update({ is_active: !ad.is_active })
+      .update({ is_active: !ad.is_active } as any)
       .eq('id', ad.id)
+
     if (error) { toast.error('Update failed'); return }
-    setAds(prev => prev.map(a => a.id === ad.id ? { ...a, is_active: !a.is_active } : a))
+
+    setAds(prev => prev.map(a =>
+      a.id === ad.id ? { ...a, is_active: !a.is_active } : a
+    ))
+
     toast.success(`Ad ${ad.is_active ? 'paused' : 'activated'}`)
   }
 
@@ -110,11 +115,11 @@ export default function AdminAdsPage() {
       description: form.description || null,
     }
     if (editingId) {
-      const { error } = await supabase.from('ad_placements').update(payload).eq('id', editingId)
+      const { error } = await supabase.from('ad_placements').update(payload as any).eq('id', editingId)
       if (error) { toast.error(error.message); return }
       toast.success('Ad placement updated')
     } else {
-      const { error } = await supabase.from('ad_placements').insert(payload)
+      const { error } = await supabase.from('ad_placements').insert(payload as any)
       if (error) { toast.error(error.message); return }
       toast.success('Ad placement created')
     }
