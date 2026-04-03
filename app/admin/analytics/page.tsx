@@ -201,7 +201,7 @@ export default function AdminAnalyticsPage() {
                     <td className="px-4 py-3 text-right text-sm font-bold text-navy-900">{p.views}</td>
                     <td className="px-4 py-3 text-right text-xs text-slate-500">{p.avgTime}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className={`text-xs font-semibold ${parseInt(p.bounce) < 40 ? 'text-green-600' : parseInt(p.bounce) < 55 ? 'text-orange-500' : 'text-slate-400'}`}>
+                      <span className={`text-xs font-semibold ${parseInt(p.bounce, 10) < 40 ? 'text-green-600' : parseInt(p.bounce, 10) < 55 ? 'text-orange-500' : 'text-slate-400'}`}>
                         {p.bounce}
                       </span>
                     </td>

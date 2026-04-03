@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Clock, ChevronRight, Calculator, Zap, ArrowRight } from 'lucide-react'
+import { Clock, ChevronRight, Zap, ArrowRight } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import UnitConverter from '@/components/UnitConverter'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
@@ -444,39 +445,7 @@ export default async function ArticlePage({ params }: Props) {
                   <button className="btn-primary btn-sm w-full justify-center">Request a Quote →</button>
                 </div>
 
-                {/* Unit Converter Widget */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calculator className="w-4 h-4 text-orange-500" />
-                    <h3 className="font-bold text-navy-900 text-sm">Unit Converter</h3>
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1.5">Metric Tons → US Short Tons</p>
-                      <div className="flex items-center gap-2">
-                        <input id="mt-input" type="number" placeholder="Metric t" className="input text-sm py-2" onChange={(e) => {
-                          const v = parseFloat(e.target.value)
-                          const out = document.getElementById('mt-output') as HTMLInputElement
-                          if (out) out.value = isNaN(v) ? '' : (v * 1.10231).toFixed(3)
-                        }} />
-                        <span className="text-xs text-slate-400">→</span>
-                        <input id="mt-output" type="number" readOnly placeholder="US tons" className="input text-sm py-2 bg-slate-50" />
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1.5">kg → lbs</p>
-                      <div className="flex items-center gap-2">
-                        <input type="number" placeholder="kg" className="input text-sm py-2" onChange={(e) => {
-                          const v = parseFloat(e.target.value)
-                          const inputs = document.querySelectorAll('.kg-out') as NodeListOf<HTMLInputElement>
-                          if (inputs[0]) inputs[0].value = isNaN(v) ? '' : (v * 2.20462).toFixed(2)
-                        }} />
-                        <span className="text-xs text-slate-400">→</span>
-                        <input className="input text-sm py-2 bg-slate-50 kg-out" type="number" readOnly placeholder="lbs" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <UnitConverter />
 
                 {/* Sponsored */}
                 <div className="bg-gradient-to-br from-navy-900 to-navy-800 rounded-xl p-5 border border-white/5 relative">

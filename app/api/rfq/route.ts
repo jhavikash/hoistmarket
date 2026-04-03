@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     const url = new URL(req.url)
     const status = url.searchParams.get('status')
-    const limit = parseInt(url.searchParams.get('limit') ?? '50')
+    const limit = parseInt(url.searchParams.get('limit') ?? '50', 10)
     let query = supabase.from('rfqs').select('*', { count: 'exact' })
     if (profile?.role !== 'admin') query = query.eq('requester_id', user.id)
     else if (status) query = query.eq('status', status)

@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
     const q        = url.searchParams.get('q') ?? ''
     const category = url.searchParams.get('category') ?? ''
     const featured = url.searchParams.get('featured') === 'true'
-    const limit    = Math.min(parseInt(url.searchParams.get('limit') ?? '20'), 50)
-    const offset   = parseInt(url.searchParams.get('offset') ?? '0')
+    const limit    = Math.min(parseInt(url.searchParams.get('limit') ?? '20', 10), 50)
+    const offset   = parseInt(url.searchParams.get('offset') ?? '0', 10)
 
     let query = supabase
       .from('articles')

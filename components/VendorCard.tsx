@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { MapPin, CheckCircle, Star, ExternalLink, MessageSquare } from 'lucide-react'
 import type { Vendor } from '@/types/database'

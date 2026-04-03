@@ -330,7 +330,7 @@ export default function AdminVendorsPage() {
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${editMode ? 'bg-orange-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}>
                       <Edit3 className="w-3.5 h-3.5" /> {editMode ? 'Editing...' : 'Edit'}
                     </button>
-                    <a href={`/directory/${selected.slug}`} target="_blank"
+                    <a href={`/directory/${selected.slug}`} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition-colors">
                       <Eye className="w-3.5 h-3.5" /> Preview
                     </a>

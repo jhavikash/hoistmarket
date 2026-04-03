@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
     const tier     = url.searchParams.get('tier')
     const verified = url.searchParams.get('verified')
     const search   = url.searchParams.get('search')
-    const limit    = Math.min(parseInt(url.searchParams.get('limit') ?? '50'), 100)
-    const offset   = parseInt(url.searchParams.get('offset') ?? '0')
+    const limit    = Math.min(parseInt(url.searchParams.get('limit') ?? '50', 10), 100)
+    const offset   = parseInt(url.searchParams.get('offset') ?? '0', 10)
 
     let query = supabase
       .from('vendors')
