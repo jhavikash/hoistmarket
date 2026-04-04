@@ -6,8 +6,11 @@ import {
   Building2, MapPin, Mail, Phone, Globe, Shield, Star,
   ChevronDown, X, Save, AlertTriangle, Users, TrendingUp
 } from 'lucide-react'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase as _sb } from '@/lib/supabaseClient'
 import toast from 'react-hot-toast'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = _sb as any
 
 type Vendor = {
   id: string

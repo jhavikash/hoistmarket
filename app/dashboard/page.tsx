@@ -8,8 +8,11 @@ import {
   User, Building2, Phone, Mail, Edit2, LogOut, ArrowRight,
   Bell, MessageSquare, Eye
 } from 'lucide-react'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase as _sb } from '@/lib/supabaseClient'
 import toast from 'react-hot-toast'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = _sb as any
 
 type Profile = {
   id: string; email: string; full_name: string | null

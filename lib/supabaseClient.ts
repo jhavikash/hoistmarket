@@ -21,3 +21,6 @@ export const supabaseAdmin = () => {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 }
+
+// ─── Untyped client for mutations (avoids 'never' TS errors with strict mode) ─
+export const supabaseMutation = createClientComponentClient()

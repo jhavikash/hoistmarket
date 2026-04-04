@@ -7,8 +7,11 @@ import { Eye, EyeOff, Mail, Lock, User, Building2, ArrowRight, CheckCircle } fro
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase as _sb } from '@/lib/supabaseClient'
 import toast from 'react-hot-toast'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = _sb as any
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),

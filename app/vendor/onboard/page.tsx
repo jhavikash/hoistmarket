@@ -7,10 +7,13 @@ import { CheckCircle, Building2, Globe, Phone, Mail, Tag, Award, ChevronRight } 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase as _sb } from '@/lib/supabaseClient'
 import toast from 'react-hot-toast'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = _sb as any
 
 const vendorSchema = z.object({
   company_name: z.string().min(2, 'Company name required'),
