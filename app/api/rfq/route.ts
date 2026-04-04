@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       rental_duration: body.rental_duration ?? null, project_description: body.project_description ?? null,
       budget_range: body.budget_range ?? null, special_requirements: body.special_requirements ?? null,
       urgency: body.urgency ?? 'medium', status: 'new', source: 'website',
-    }).select('id, rfq_number').single()
+    } as any).select('id, rfq_number').single()
 
     if (re) return NextResponse.json({ error: re.message }, { status: 500 })
 
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         .slice(0, 5)
       matchedIds = scored.map(v => v.id)
       if (matchedIds.length > 0) {
-        await supabase.from('rfqs').update({ matched_vendor_ids: matchedIds, status: 'matched' }).eq('id', rfq.id)
+        await supabase.from('rfqs').update({ matched_vendor_ids: matchedIds, status: 'matched' } as any).eq('id', rfq.id)
       }
     }
 
@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     const url = new URL(req.url)
     const status = url.searchParams.get('status')
-    const limit = parseInt(url.searchParams.get('limit') ?? '50', 10)
+    const limit = parseInt(url.searchParams.get('limit', 10) ?? '50', 10)
     let query = supabase.from('rfqs').select('*', { count: 'exact' })
     if (profile?.role !== 'admin') query = query.eq('requester_id', user.id)
     else if (status) query = query.eq('status', status)
@@ -145,7 +145,7 @@ export async function PUT(req: NextRequest) {
       status: 'dispatched', dispatched_to: vendorIds,
       dispatched_at: new Date().toISOString(),
       dispatch_message: message ?? null, commission_status: 'expected',
-    }).eq('id', rfqId)
+    } as any).eq('id', rfqId)
 
     const { data: rfq } = await supabase.from('rfqs')
       .select('rfq_number, requester_name, equipment_category, site_region, required_capacity, urgency, project_description')
@@ -169,7 +169,7 @@ export async function PUT(req: NextRequest) {
           title: `New RFQ: ${rfq?.equipment_category}`,
           message: `You have a new RFQ for ${rfq?.equipment_category} in ${rfq?.site_region}. Log in to view and respond.`,
           data: { rfq_id: rfqId, rfq_number: rfq?.rfq_number },
-        })
+        } as any)
       }
 
       // Send dispatch email to vendor

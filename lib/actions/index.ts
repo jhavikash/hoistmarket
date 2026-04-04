@@ -72,7 +72,7 @@ export async function submitRFQ(formData: {
     urgency: (formData.urgency ?? 'medium') as 'low' | 'medium' | 'high' | 'urgent',
     status: 'new',
     source: 'website',
-  }).select('id, rfq_number').single()
+  } as any).select('id, rfq_number').single()
 
   if (error) throw new Error(error.message)
 
@@ -144,7 +144,7 @@ async function runRFQMatching(rfqId: string, category: string, region: string) {
   await supabase.from('rfqs').update({
     matched_vendor_ids: matchedIds,
     status: matchedIds.length > 0 ? 'matched' : 'new',
-  }).eq('id', rfqId)
+  } as any).eq('id', rfqId)
 }
 
 /** Admin: dispatch RFQ to selected vendors (BCC logic) */
@@ -159,7 +159,7 @@ export async function dispatchRFQ(rfqId: string, vendorIds: string[], message?: 
     dispatched_at: new Date().toISOString(),
     dispatch_message: message ?? null,
     commission_status: 'expected',
-  }).eq('id', rfqId)
+  } as any).eq('id', rfqId)
 
   if (error) throw new Error(error.message)
 
@@ -190,7 +190,7 @@ export async function dispatchRFQ(rfqId: string, vendorIds: string[], message?: 
         title: `New RFQ: ${rfq?.equipment_category ?? 'Equipment'}`,
         message: `You have received an RFQ for ${rfq?.equipment_category} in ${rfq?.site_region}. Capacity: ${rfq?.required_capacity ?? 'TBD'}. Please log in to view and respond.`,
         data: { rfq_id: rfqId, rfq_number: rfq?.rfq_number },
-      })
+      } as any)
     }
   }
 
@@ -212,7 +212,7 @@ export async function updateRFQStatus(rfqId: string, updates: {
   const { error } = await supabase.from('rfqs').update({
     ...updates,
     updated_at: new Date().toISOString(),
-  }).eq('id', rfqId)
+  } as any).eq('id', rfqId)
 
   if (error) throw new Error(error.message)
   revalidatePath('/admin/leads')
@@ -259,12 +259,12 @@ export async function createVendorListing(data: {
     verified: false,
     featured: false,
     is_active: true,
-  }).select('id, slug').single()
+  } as any).select('id, slug').single()
 
   if (error) throw new Error(error.message)
 
   // Update profile role to vendor
-  await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id)
+  await supabase.from('profiles').update({ role: 'vendor' } as any).eq('id', user.id)
 
   revalidatePath('/directory')
   return { success: true, slug: vendor.slug }
@@ -277,7 +277,7 @@ export async function approveVendor(vendorId: string, notes?: string) {
 
   const { error } = await supabase.from('vendors').update({
     verified: true, admin_notes: notes ?? null,
-  }).eq('id', vendorId)
+  } as any).eq('id', vendorId)
 
   if (error) throw new Error(error.message)
 
@@ -307,7 +307,7 @@ export async function suspendVendor(vendorId: string, reason: string) {
 
   const { error } = await supabase.from('vendors').update({
     is_active: false, verified: false, admin_notes: reason,
-  }).eq('id', vendorId)
+  } as any).eq('id', vendorId)
 
   if (error) throw new Error(error.message)
   revalidatePath('/admin/vendors')
@@ -323,7 +323,7 @@ export async function updateVendorTier(vendorId: string, tier: 'free' | 'standar
     tier,
     featured: tier === 'featured' || tier === 'enterprise',
     membership_expires_at: expiresAt ?? null,
-  }).eq('id', vendorId)
+  } as any).eq('id', vendorId)
 
   if (error) throw new Error(error.message)
   revalidatePath('/admin/vendors')
@@ -450,7 +450,7 @@ export async function activateMembership(data: {
     status: 'active',
     starts_at: new Date().toISOString(),
     expires_at: expiresAt.toISOString(),
-  })
+  } as any)
   if (mErr) throw new Error(mErr.message)
 
   // Update vendor tier
@@ -458,7 +458,7 @@ export async function activateMembership(data: {
     tier: data.tier,
     featured: data.tier === 'featured' || data.tier === 'enterprise',
     membership_expires_at: expiresAt.toISOString(),
-  }).eq('id', data.vendor_id)
+  } as any).eq('id', data.vendor_id)
   if (vErr) throw new Error(vErr.message)
 
   revalidatePath('/directory')
@@ -475,7 +475,7 @@ export async function markNotificationsRead(notificationIds?: string[]) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const query = supabase.from('notifications').update({ read: true }).eq('user_id', user.id)
+  const query = supabase.from('notifications').update({ read: true } as any).eq('user_id', user.id)
   if (notificationIds?.length) {
     query.in('id', notificationIds)
   }
@@ -502,7 +502,7 @@ export async function updateProfile(data: {
     company: data.company ?? null,
     phone: data.phone ?? null,
     updated_at: new Date().toISOString(),
-  }).eq('id', user.id)
+  } as any).eq('id', user.id)
 
   if (error) throw new Error(error.message)
   revalidatePath('/dashboard')

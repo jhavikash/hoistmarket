@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
     const tier     = url.searchParams.get('tier')
     const verified = url.searchParams.get('verified')
     const search   = url.searchParams.get('search')
-    const limit    = Math.min(parseInt(url.searchParams.get('limit') ?? '50', 10), 100)
-    const offset   = parseInt(url.searchParams.get('offset') ?? '0', 10)
+    const limit    = Math.min(parseInt(url.searchParams.get('limit', 10) ?? '50', 10), 100)
+    const offset   = parseInt(url.searchParams.get('offset', 10) ?? '0', 10)
 
     let query = supabase
       .from('vendors')
@@ -81,12 +81,12 @@ export async function POST(req: NextRequest) {
       website: body.website ?? null, year_established: body.year_established ?? null,
       employee_count: body.employee_count ?? null,
       tier: 'free', verified: false, featured: false, is_active: true,
-    }).select('id, slug').single()
+    } as any).select('id, slug').single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     // Update user role to vendor
-    await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id)
+    await supabase.from('profiles').update({ role: 'vendor' } as any).eq('id', user.id)
 
     return NextResponse.json({ success: true, slug: vendor.slug, id: vendor.id }, { status: 201 })
   } catch (e: any) {

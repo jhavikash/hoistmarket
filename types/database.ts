@@ -35,6 +35,7 @@ export interface Database {
           role?: 'admin' | 'vendor' | 'user'
           avatar_url?: string | null
           updated_at?: string
+          [key: string]: unknown
         }
       }
       vendors: {
@@ -336,9 +337,17 @@ export interface Database {
           expires_at: string
         }
         Update: {
+          tier?: 'standard' | 'featured' | 'enterprise'
+          price_inr?: number
+          price_usd?: number
+          billing_cycle?: 'monthly' | 'annual'
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
           status?: 'active' | 'past_due' | 'cancelled' | 'expired'
-          cancelled_at?: string | null
+          starts_at?: string
           expires_at?: string
+          cancelled_at?: string | null
         }
       }
       ad_placements: {
@@ -375,10 +384,17 @@ export interface Database {
           is_active?: boolean
         }
         Update: {
+          vendor_id?: string | null
           title?: string
           description?: string | null
           cta_text?: string
           cta_url?: string
+          placement?: 'homepage_banner' | 'kb_sidebar' | 'directory_featured' | 'article_inline'
+          image_url?: string | null
+          price_per_month?: number
+          currency?: string
+          starts_at?: string
+          ends_at?: string
           is_active?: boolean
           impressions?: number
           clicks?: number

@@ -70,7 +70,7 @@ export default function AdminAdsPage() {
   const handleToggle = async (ad: Ad) => {
     const { error } = await supabase
       .from('ad_placements')
-      .update({ is_active: !ad.is_active })
+      .update({ is_active: !ad.is_active } as any)
       .eq('id', ad.id)
     if (error) { toast.error('Update failed'); return }
     setAds(prev => prev.map(a => a.id === ad.id ? { ...a, is_active: !a.is_active } : a))
@@ -114,7 +114,7 @@ export default function AdminAdsPage() {
       if (error) { toast.error(error.message); return }
       toast.success('Ad placement updated')
     } else {
-      const { error } = await supabase.from('ad_placements').insert(payload)
+      const { error } = await supabase.from('ad_placements').insert(payload as any)
       if (error) { toast.error(error.message); return }
       toast.success('Ad placement created')
     }

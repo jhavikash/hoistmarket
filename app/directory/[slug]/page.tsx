@@ -45,7 +45,7 @@ export default async function VendorProfilePage({ params }: PageProps) {
   if (!vendor) notFound()
 
   // Increment view count (fire and forget)
-  supabase.from('vendors').update({ views_count: (vendor.views_count || 0) + 1 }).eq('id', vendor.id)
+  supabase.from('vendors').update({ views_count: (vendor.views_count || 0) + 1 } as any).eq('id', vendor.id)
 
   const schema = {
     '@context': 'https://schema.org',

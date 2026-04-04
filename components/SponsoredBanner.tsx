@@ -86,7 +86,7 @@ export default function SponsoredBanner({
         // Track impression
         supabase
           .from('ad_placements')
-          .update({ impressions: undefined }) // triggers RPC in production
+          .rpc('increment_ad_impression', { ad_id: data.id }).catch(() => {}) // triggers RPC in production
           .eq('id', data.id)
       }
       setLoaded(true)
@@ -105,7 +105,7 @@ export default function SponsoredBanner({
   const handleClick = () => {
     if (ad) {
       // Track click
-      supabase.from('ad_placements').update({ clicks: undefined }).eq('id', ad.id)
+      supabase.rpc('increment_ad_click', { ad_id: ad.id }).catch(() => {})
     }
   }
 

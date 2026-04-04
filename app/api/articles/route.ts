@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
     const q        = url.searchParams.get('q') ?? ''
     const category = url.searchParams.get('category') ?? ''
     const featured = url.searchParams.get('featured') === 'true'
-    const limit    = Math.min(parseInt(url.searchParams.get('limit') ?? '20', 10), 50)
-    const offset   = parseInt(url.searchParams.get('offset') ?? '0', 10)
+    const limit    = Math.min(parseInt(url.searchParams.get('limit', 10) ?? '20', 10), 50)
+    const offset   = parseInt(url.searchParams.get('offset', 10) ?? '0', 10)
 
     let query = supabase
       .from('articles')
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       const { data, error } = await supabase.from('articles').update({
         ...fields,
         published_at: fields.is_published && !fields.published_at ? new Date().toISOString() : fields.published_at,
-      }).eq('id', id).select('id, slug').single()
+      } as any).eq('id', id).select('id, slug').single()
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       return NextResponse.json({ success: true, ...data })
     } else {
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         ...fields,
         author_id: user.id,
         published_at: fields.is_published ? new Date().toISOString() : null,
-      }).select('id, slug').single()
+      } as any).select('id, slug').single()
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       return NextResponse.json({ success: true, ...data }, { status: 201 })
     }

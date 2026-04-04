@@ -114,7 +114,7 @@ export async function PUT(req: NextRequest) {
       status: 'active',
       starts_at: new Date().toISOString(),
       expires_at: expiresAt.toISOString(),
-    })
+    } as any)
     if (mErr) return NextResponse.json({ error: mErr.message }, { status: 500 })
 
     // Upgrade vendor tier
@@ -122,7 +122,7 @@ export async function PUT(req: NextRequest) {
       tier: plan.tier,
       featured: plan.tier === 'featured' || plan.tier === 'enterprise',
       membership_expires_at: expiresAt.toISOString(),
-    }).eq('id', vendorId)
+    } as any).eq('id', vendorId)
     if (vErr) return NextResponse.json({ error: vErr.message }, { status: 500 })
 
     // Notify vendor

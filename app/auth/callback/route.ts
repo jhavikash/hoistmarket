@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
           full_name: data.user.user_metadata?.full_name || null,
           company: data.user.user_metadata?.company || null,
           role: data.user.user_metadata?.role || 'user',
-        })
+        } as any)
       }
 
       // Redirect admin to dashboard

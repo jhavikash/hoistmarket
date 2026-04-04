@@ -80,7 +80,7 @@ export default function DashboardPage() {
       company: editForm.company || null,
       phone: editForm.phone || null,
       updated_at: new Date().toISOString(),
-    }).eq('id', profile.id)
+    } as any).eq('id', profile.id)
     setSaving(false)
     if (error) { toast.error(error.message); return }
     setProfile(p => p ? { ...p, ...editForm } : null)
@@ -91,7 +91,7 @@ export default function DashboardPage() {
   const markRead = async () => {
     const unread = notifications.filter(n => !n.read).map(n => n.id)
     if (!unread.length) return
-    await supabase.from('notifications').update({ read: true }).in('id', unread)
+    await supabase.from('notifications').update({ read: true } as any).in('id', unread)
     setNotifs(prev => prev.map(n => ({ ...n, read: true })))
   }
 

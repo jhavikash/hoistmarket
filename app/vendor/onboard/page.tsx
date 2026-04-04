@@ -111,7 +111,7 @@ export default function VendorOnboardPage() {
         verified: false,
         featured: false,
         is_active: true,
-      })
+      } as any)
 
       if (error) {
         if (error.code === '23505') {
@@ -123,7 +123,7 @@ export default function VendorOnboardPage() {
       }
 
       // Update profile role to vendor
-      await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id)
+      await supabase.from('profiles').update({ role: 'vendor' } as any).eq('id', user.id)
 
       setIsSubmitted(true)
       toast.success('Vendor listing submitted for review!')

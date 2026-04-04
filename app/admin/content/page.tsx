@@ -144,7 +144,7 @@ export default function AdminContentPage() {
       .update({
         is_published: !a.is_published,
         published_at: !a.is_published ? new Date().toISOString() : null,
-      })
+      } as any)
       .eq('id', a.id)
 
     if (error) { toast.error(error.message); return }
@@ -395,7 +395,7 @@ export default function AdminContentPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <Link href={`/knowledge-base/${a.slug}`} target="_blank"
+                        <Link href={`/knowledge-base/${a.slug}`} target="_blank" rel="noopener noreferrer"
                           className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Preview">
                           <Globe className="w-3.5 h-3.5" />
                         </Link>
