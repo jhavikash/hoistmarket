@@ -11,15 +11,16 @@ import Footer from '@/components/Footer'
 import type { Database } from '@/types/database'
 
 interface PageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+
   const supabase = await createSupabaseServer()
-  const { data: vendor } = await supabase
-    .from('vendors')
+  const { data: vendor } = await (supabase.from('vendors') as any)
     .select('company_name, description, city, country, equipment_categories')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single()
 
   if (!vendor) return { title: 'Vendor Not Found' }
@@ -33,18 +34,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export const revalidate = 600
 
 export default async function VendorProfilePage({ params }: PageProps) {
+  const { slug } = await params
+
   const supabase = await createSupabaseServer()
-  const { data: vendor } = await supabase
-    .from('vendors')
+  const { data: vendor } = await (supabase.from('vendors') as any)
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('is_active', true)
     .single()
 
   if (!vendor) notFound()
 
   // Increment view count (fire and forget)
-  supabase.from('vendors').update({ views_count: (vendor.views_count || 0) + 1 }).eq('id', vendor.id)
+  ;(supabase.from('vendors') as any)
+  .update({ views_count: (vendor.views_count || 0) + 1 })
+  .eq('id', vendor.id)
 
   const schema = {
     '@context': 'https://schema.org',
