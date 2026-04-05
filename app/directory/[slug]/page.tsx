@@ -10,33 +10,32 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import type { Database } from '@/types/database'
 
-interface PageProps {
-  params: Promise<{ slug: string }>
-}
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { slug } = await params
 
   const supabase = await createSupabaseServer()
+
   const { data: vendor } = await (supabase.from('vendors') as any)
-    .select('company_name, description, city, country, equipment_categories')
+    .select('company_name, description, city, country')
     .eq('slug', slug)
     .single()
 
   if (!vendor) return { title: 'Vendor Not Found' }
 
   return {
-    title: `${vendor.company_name} — Lifting Equipment Vendor | HoistMarket`,
-    description: vendor.description || `${vendor.company_name} — Verified lifting equipment vendor based in ${vendor.city}, ${vendor.country}.`,
+    title: vendor.company_name,
+    description: vendor.description || ''
   }
 }
 
 export const revalidate = 600
 
-export default async function VendorProfilePage({ params }: PageProps) {
+export default async function VendorProfilePage({ params }: any) {
   const { slug } = await params
 
   const supabase = await createSupabaseServer()
+
   const { data: vendor } = await (supabase.from('vendors') as any)
     .select('*')
     .eq('slug', slug)
@@ -45,10 +44,14 @@ export default async function VendorProfilePage({ params }: PageProps) {
 
   if (!vendor) notFound()
 
-  // Increment view count (fire and forget)
   ;(supabase.from('vendors') as any)
-  .update({ views_count: (vendor.views_count || 0) + 1 })
-  .eq('id', vendor.id)
+    .update({ views_count: (vendor.views_count || 0) + 1 })
+    .eq('id', vendor.id)
+
+  return (
+    <div>{vendor.company_name}</div>
+  )
+}
 
   const schema = {
     '@context': 'https://schema.org',
