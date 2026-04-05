@@ -73,7 +73,7 @@ export default function AdminAdsPage() {
   const handleToggle = async (ad: Ad) => {
     const { error } = await supabase
       .from('ad_placements')
-      .update({ is_active: !ad.is_active } as any)
+      .update({ is_active: !ad.is_active })
       .eq('id', ad.id)
     if (error) { toast.error('Update failed'); return }
     setAds(prev => prev.map(a => a.id === ad.id ? { ...a, is_active: !a.is_active } : a))

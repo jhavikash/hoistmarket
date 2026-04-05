@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { MapPin, Zap, ArrowLeft, CheckCircle, Clock } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 
 const RENTAL_MARKET_DATA: Record<string, {
@@ -85,7 +84,7 @@ const RENTAL_MARKET_DATA: Record<string, {
 interface PageProps { params: { slug: string } }
 
 export async function generateStaticParams() {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createSupabaseServer()
   return Object.keys(RENTAL_MARKET_DATA).map(slug => ({ slug }))
 }
 
@@ -99,7 +98,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function RentalMarketPage({ params }: PageProps) {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createSupabaseServer()
   const market = RENTAL_MARKET_DATA[params.slug]
   if (!market) notFound()
 

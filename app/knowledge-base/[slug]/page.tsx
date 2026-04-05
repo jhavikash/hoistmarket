@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Clock, ChevronRight, Zap, ArrowRight } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import UnitConverter from '@/components/UnitConverter'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 
 // ── PILLAR ARTICLE CONTENT ──────────────────────────────────────────
@@ -294,7 +293,7 @@ Companies that establish service networks, spare parts availability, and trained
 type Props = { params: { slug: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createSupabaseServer()
   const article = PILLAR_ARTICLES[params.slug]
   if (!article) {
     const { data } = await supabase.from('articles').select('title, excerpt, seo_keywords').eq('slug', params.slug).single()
@@ -342,7 +341,7 @@ function renderMarkdown(content: string): string {
 }
 
 export default async function ArticlePage({ params }: Props) {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createSupabaseServer()
   let article = PILLAR_ARTICLES[params.slug]
 
   if (!article) {

@@ -133,7 +133,7 @@ export default function VendorPortalPage() {
         quote_currency: quoteForm.currency,
         message: quoteForm.message,
         responded_at: new Date().toISOString(),
-      } as any).eq('id', rfqResponseId)
+      }).eq('id', rfqResponseId)
 
       if (error) throw error
 
@@ -150,7 +150,7 @@ export default function VendorPortalPage() {
     if (!data) return
     const unreadIds = data.notifications.filter(n => !n.read).map(n => n.id)
     if (!unreadIds.length) return
-    await supabase.from('notifications').update({ read: true } as any).in('id', unreadIds)
+    await supabase.from('notifications').update({ read: true }).in('id', unreadIds)
     setData(prev => prev ? {
       ...prev,
       notifications: prev.notifications.map(n => ({ ...n, read: true })),

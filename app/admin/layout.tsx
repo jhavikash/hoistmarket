@@ -10,22 +10,28 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 
+interface Profile {
+  role: string
+  full_name: string | null
+  email: string
+}
+
 const navItems = [
-  { href: '/admin', label: 'Overview', icon: LayoutDashboard, exact: true },
-  { href: '/admin/leads', label: 'RFQ Leads', icon: Inbox, badge: 'new' },
-  { href: '/admin/vendors', label: 'Vendor Onboarding', icon: Users },
-  { href: '/admin/content', label: 'Content Calendar', icon: FileText },
-  { href: '/admin/revenue', label: 'Revenue Tracker', icon: DollarSign },
-  { href: '/admin/ads', label: 'Ad Placements', icon: Megaphone },
-  { href: '/admin/analytics', label: 'SEO & Analytics', icon: BarChart3 },
-  { href: '/admin/settings', label: 'Settings', icon: Settings },
+  { href: '/admin',           label: 'Overview',          icon: LayoutDashboard, exact: true },
+  { href: '/admin/leads',     label: 'RFQ Leads',         icon: Inbox,           badge: 'new' },
+  { href: '/admin/vendors',   label: 'Vendor Onboarding', icon: Users },
+  { href: '/admin/content',   label: 'Content Calendar',  icon: FileText },
+  { href: '/admin/revenue',   label: 'Revenue Tracker',   icon: DollarSign },
+  { href: '/admin/ads',       label: 'Ad Placements',     icon: Megaphone },
+  { href: '/admin/analytics', label: 'SEO & Analytics',   icon: BarChart3 },
+  { href: '/admin/settings',  label: 'Settings',          icon: Settings },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [loading, setLoading] = useState(true)
-  const [userName, setUserName] = useState('')
+  const [loading, setLoading]         = useState(true)
+  const [userName, setUserName]       = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [newRFQCount, setNewRFQCount] = useState(0)
 
@@ -34,11 +40,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login?redirect=/admin'); return }
 
-      const { data: profile } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('role, full_name, email')
         .eq('id', user.id)
         .single()
+
+      const profile = data as Profile | null
 
       if (!profile || profile.role !== 'admin') {
         router.push('/?error=unauthorized')
@@ -48,12 +56,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setUserName(profile.full_name || profile.email || 'Admin')
       setLoading(false)
 
-      // Get new RFQ count
       const { count } = await supabase
         .from('rfqs')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'new')
-      setNewRFQCount(count || 0)
+      setNewRFQCount(count ?? 0)
     }
     checkAuth()
   }, [router])
@@ -87,7 +94,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         transition-transform duration-300
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        {/* Logo */}
         <div className="px-4 py-5 border-b border-white/5 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -103,7 +109,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
 
-        {/* User Info */}
         <div className="px-4 py-3 border-b border-white/5">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
@@ -116,7 +121,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-slate-600 px-2 pb-2">Operations</p>
           {navItems.map((item) => {
@@ -143,20 +147,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             )
           })}
-
           <div className="pt-4">
             <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-slate-600 px-2 pb-2">Quick Actions</p>
-            <Link
-              href="/"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-            >
+            <Link href="/" className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-all">
               <TrendingUp className="w-4 h-4" />
               View Live Site
             </Link>
           </div>
         </nav>
 
-        {/* Sign Out */}
         <div className="px-3 py-4 border-t border-white/5">
           <button
             onClick={handleSignOut}
@@ -168,27 +167,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Sidebar Overlay (mobile) */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
         <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 text-slate-500 hover:text-slate-700 rounded"
-            >
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-slate-500 hover:text-slate-700 rounded">
               <Menu className="w-5 h-5" />
             </button>
             <div>
               <h1 className="text-sm font-bold text-navy-900">
                 {navItems.find(n => isActive(n.href, n.exact))?.label || 'Admin Dashboard'}
               </h1>
-              <p className="text-xs text-slate-400">HoistMarket Solo Admin · March 2026</p>
+              <p className="text-xs text-slate-400">HoistMarket Solo Admin</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -203,11 +196,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
           </div>
         </header>
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
     </div>
   )

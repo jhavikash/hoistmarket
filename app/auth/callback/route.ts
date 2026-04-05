@@ -1,7 +1,6 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -9,13 +8,10 @@ export async function GET(request: NextRequest) {
   const next = requestUrl.searchParams.get('next') || '/'
 
   if (code) {
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
-    
+    const supabase = await createSupabaseServer()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-    
+
     if (!error && data?.user) {
-      // Ensure profile exists
       const { data: profile } = await supabase
         .from('profiles')
         .select('id, role')
@@ -23,16 +19,15 @@ export async function GET(request: NextRequest) {
         .single()
 
       if (!profile) {
-        await supabase.from('profiles').insert({
+        await (supabase as any).from('profiles').insert({
           id: data.user.id,
-          email: data.user.email!,
-          full_name: data.user.user_metadata?.full_name || null,
-          company: data.user.user_metadata?.company || null,
-          role: data.user.user_metadata?.role || 'user',
-        } as any)
+          email: data.user.email,
+          full_name: data.user.user_metadata?.full_name ?? null,
+          company: data.user.user_metadata?.company ?? null,
+          role: data.user.user_metadata?.role ?? 'user',
+        })
       }
 
-      // Redirect admin to dashboard
       if (profile?.role === 'admin') {
         return NextResponse.redirect(new URL('/admin', requestUrl.origin))
       }

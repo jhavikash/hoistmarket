@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
@@ -7,7 +6,7 @@ import type { Database } from '@/types/database'
 // GET /api/vendors — filtered vendor list
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const url = new URL(req.url)
     const region   = url.searchParams.get('region')
     const category = url.searchParams.get('category')
@@ -51,7 +50,7 @@ export async function GET(req: NextRequest) {
 // POST /api/vendors — create vendor listing (authenticated)
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Must be signed in' }, { status: 401 })
 
@@ -81,12 +80,12 @@ export async function POST(req: NextRequest) {
       website: body.website ?? null, year_established: body.year_established ?? null,
       employee_count: body.employee_count ?? null,
       tier: 'free', verified: false, featured: false, is_active: true,
-    } as any).select('id, slug').single()
+    }).select('id, slug').single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     // Update user role to vendor
-    await supabase.from('profiles').update({ role: 'vendor' } as any).eq('id', user.id)
+    await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id)
 
     return NextResponse.json({ success: true, slug: vendor.slug, id: vendor.id }, { status: 201 })
   } catch (e: any) {
@@ -97,7 +96,7 @@ export async function POST(req: NextRequest) {
 // PATCH /api/vendors — admin update vendor
 export async function PATCH(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

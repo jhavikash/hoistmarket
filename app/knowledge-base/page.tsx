@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import { Suspense } from 'react'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { Clock, Search, BookOpen, ArrowRight, ChevronRight, Star } from 'lucide-react'
 import Navbar from '@/components/Navbar'
@@ -26,7 +25,7 @@ const CAT_ICONS: Record<string, string> = {
 }
 
 async function getArticles() {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createSupabaseServer()
   const { data, error } = await supabase
     .from('articles')
     .select('id, slug, title, excerpt, category, tags, reading_time, views_count, is_featured, published_at')

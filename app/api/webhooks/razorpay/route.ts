@@ -70,14 +70,14 @@ export async function POST(req: NextRequest) {
           status: 'active',
           starts_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
-        } as any)
+        })
 
         // Upgrade vendor
         await supabase.from('vendors').update({
           tier: plan.tier,
           featured: plan.tier === 'featured' || plan.tier === 'enterprise',
           membership_expires_at: expiresAt.toISOString(),
-        } as any).eq('id', vendorId)
+        }).eq('id', vendorId)
 
         // Get vendor info for notification
         const { data: vendor } = await supabase.from('vendors')

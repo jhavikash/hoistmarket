@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import DirectoryClient from './DirectoryClient'
@@ -15,7 +14,7 @@ export const metadata: Metadata = {
 export const revalidate = 120 // revalidate every 2 minutes
 
 export default async function DirectoryPage() {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createSupabaseServer()
 
   // Server-side initial fetch — fast SSR for SEO
   const { data: vendors, error } = await supabase

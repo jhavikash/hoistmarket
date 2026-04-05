@@ -1,17 +1,16 @@
 'use server'
 
-import { createServerActionClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import { revalidatePath } from 'next/cache'
 import type { Database } from '@/types/database'
 
 // ── Helper: get authenticated server client ──────────────────
-function getClient() {
-  return createServerActionClient<Database>({ cookies })
+async function getClient() {
+  return createSupabaseServer()
 }
 
 // ── Helper: verify admin role ─────────────────────────────────
-async function requireAdmin(supabase: ReturnType<typeof getClient>) {
+async function requireAdmin(supabase: Awaited<ReturnType<typeof getClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -46,7 +45,7 @@ export async function submitRFQ(formData: {
   special_requirements?: string
   urgency?: string
 }) {
-  const supabase = getClient()
+  const supabase = await getClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   // Insert RFQ
@@ -72,7 +71,7 @@ export async function submitRFQ(formData: {
     urgency: (formData.urgency ?? 'medium') as 'low' | 'medium' | 'high' | 'urgent',
     status: 'new',
     source: 'website',
-  } as any).select('id, rfq_number').single()
+  }).select('id, rfq_number').single()
 
   if (error) throw new Error(error.message)
 
@@ -94,7 +93,7 @@ export async function submitRFQ(formData: {
 
 /** RFQ Matching Engine — scores all verified vendors and stores top matches */
 async function runRFQMatching(rfqId: string, category: string, region: string) {
-  const supabase = getClient()
+  const supabase = await getClient()
 
   const { data: vendors } = await supabase
     .from('vendors')
@@ -144,12 +143,12 @@ async function runRFQMatching(rfqId: string, category: string, region: string) {
   await supabase.from('rfqs').update({
     matched_vendor_ids: matchedIds,
     status: matchedIds.length > 0 ? 'matched' : 'new',
-  } as any).eq('id', rfqId)
+  }).eq('id', rfqId)
 }
 
 /** Admin: dispatch RFQ to selected vendors (BCC logic) */
 export async function dispatchRFQ(rfqId: string, vendorIds: string[], message?: string) {
-  const supabase = getClient()
+  const supabase = await getClient()
   await requireAdmin(supabase)
 
   // Update RFQ status
@@ -159,7 +158,7 @@ export async function dispatchRFQ(rfqId: string, vendorIds: string[], message?: 
     dispatched_at: new Date().toISOString(),
     dispatch_message: message ?? null,
     commission_status: 'expected',
-  } as any).eq('id', rfqId)
+  }).eq('id', rfqId)
 
   if (error) throw new Error(error.message)
 
@@ -190,7 +189,7 @@ export async function dispatchRFQ(rfqId: string, vendorIds: string[], message?: 
         title: `New RFQ: ${rfq?.equipment_category ?? 'Equipment'}`,
         message: `You have received an RFQ for ${rfq?.equipment_category} in ${rfq?.site_region}. Capacity: ${rfq?.required_capacity ?? 'TBD'}. Please log in to view and respond.`,
         data: { rfq_id: rfqId, rfq_number: rfq?.rfq_number },
-      } as any)
+      })
     }
   }
 
@@ -206,13 +205,13 @@ export async function updateRFQStatus(rfqId: string, updates: {
   expected_commission?: number
   actual_deal_value?: number
 }) {
-  const supabase = getClient()
+  const supabase = await getClient()
   await requireAdmin(supabase)
 
   const { error } = await supabase.from('rfqs').update({
     ...updates,
     updated_at: new Date().toISOString(),
-  } as any).eq('id', rfqId)
+  }).eq('id', rfqId)
 
   if (error) throw new Error(error.message)
   revalidatePath('/admin/leads')
@@ -231,7 +230,7 @@ export async function createVendorListing(data: {
   email: string; phone?: string; whatsapp?: string; website?: string
   year_established?: number; employee_count?: string
 }) {
-  const supabase = getClient()
+  const supabase = await getClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Must be signed in to list a company')
 
@@ -259,12 +258,12 @@ export async function createVendorListing(data: {
     verified: false,
     featured: false,
     is_active: true,
-  } as any).select('id, slug').single()
+  }).select('id, slug').single()
 
   if (error) throw new Error(error.message)
 
   // Update profile role to vendor
-  await supabase.from('profiles').update({ role: 'vendor' } as any).eq('id', user.id)
+  await supabase.from('profiles').update({ role: 'vendor' }).eq('id', user.id)
 
   revalidatePath('/directory')
   return { success: true, slug: vendor.slug }
@@ -272,12 +271,12 @@ export async function createVendorListing(data: {
 
 /** Admin: approve/verify a vendor */
 export async function approveVendor(vendorId: string, notes?: string) {
-  const supabase = getClient()
+  const supabase = await getClient()
   await requireAdmin(supabase)
 
   const { error } = await supabase.from('vendors').update({
     verified: true, admin_notes: notes ?? null,
-  } as any).eq('id', vendorId)
+  }).eq('id', vendorId)
 
   if (error) throw new Error(error.message)
 
@@ -302,12 +301,12 @@ export async function approveVendor(vendorId: string, notes?: string) {
 
 /** Admin: reject/suspend vendor */
 export async function suspendVendor(vendorId: string, reason: string) {
-  const supabase = getClient()
+  const supabase = await getClient()
   await requireAdmin(supabase)
 
   const { error } = await supabase.from('vendors').update({
     is_active: false, verified: false, admin_notes: reason,
-  } as any).eq('id', vendorId)
+  }).eq('id', vendorId)
 
   if (error) throw new Error(error.message)
   revalidatePath('/admin/vendors')
@@ -316,14 +315,14 @@ export async function suspendVendor(vendorId: string, reason: string) {
 
 /** Admin: update vendor tier (after payment confirmed) */
 export async function updateVendorTier(vendorId: string, tier: 'free' | 'standard' | 'featured' | 'enterprise', expiresAt?: string) {
-  const supabase = getClient()
+  const supabase = await getClient()
   await requireAdmin(supabase)
 
   const { error } = await supabase.from('vendors').update({
     tier,
     featured: tier === 'featured' || tier === 'enterprise',
     membership_expires_at: expiresAt ?? null,
-  } as any).eq('id', vendorId)
+  }).eq('id', vendorId)
 
   if (error) throw new Error(error.message)
   revalidatePath('/admin/vendors')
@@ -337,7 +336,7 @@ export async function submitVendorQuote(rfqId: string, vendorId: string, quoteDa
   quote_currency: string
   message: string
 }) {
-  const supabase = getClient()
+  const supabase = await getClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -386,7 +385,7 @@ export async function upsertArticle(data: {
   category: string; tags?: string[]; seo_title?: string; seo_description?: string
   seo_keywords?: string[]; reading_time?: number; is_published?: boolean; is_featured?: boolean
 }) {
-  const supabase = getClient()
+  const supabase = await getClient()
   const admin = await requireAdmin(supabase)
 
   const payload = {
@@ -432,7 +431,7 @@ export async function activateMembership(data: {
   razorpay_payment_id?: string
   razorpay_signature?: string
 }) {
-  const supabase = getClient()
+  const supabase = await getClient()
 
   const expiresAt = new Date()
   expiresAt.setMonth(expiresAt.getMonth() + (data.billing_cycle === 'annual' ? 12 : 1))
@@ -450,7 +449,7 @@ export async function activateMembership(data: {
     status: 'active',
     starts_at: new Date().toISOString(),
     expires_at: expiresAt.toISOString(),
-  } as any)
+  })
   if (mErr) throw new Error(mErr.message)
 
   // Update vendor tier
@@ -458,7 +457,7 @@ export async function activateMembership(data: {
     tier: data.tier,
     featured: data.tier === 'featured' || data.tier === 'enterprise',
     membership_expires_at: expiresAt.toISOString(),
-  } as any).eq('id', data.vendor_id)
+  }).eq('id', data.vendor_id)
   if (vErr) throw new Error(vErr.message)
 
   revalidatePath('/directory')
@@ -471,11 +470,11 @@ export async function activateMembership(data: {
 
 /** Mark notifications as read */
 export async function markNotificationsRead(notificationIds?: string[]) {
-  const supabase = getClient()
+  const supabase = await getClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const query = supabase.from('notifications').update({ read: true } as any).eq('user_id', user.id)
+  const query = supabase.from('notifications').update({ read: true }).eq('user_id', user.id)
   if (notificationIds?.length) {
     query.in('id', notificationIds)
   }
@@ -493,7 +492,7 @@ export async function markNotificationsRead(notificationIds?: string[]) {
 export async function updateProfile(data: {
   full_name?: string; company?: string; phone?: string
 }) {
-  const supabase = getClient()
+  const supabase = await getClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -502,7 +501,7 @@ export async function updateProfile(data: {
     company: data.company ?? null,
     phone: data.phone ?? null,
     updated_at: new Date().toISOString(),
-  } as any).eq('id', user.id)
+  }).eq('id', user.id)
 
   if (error) throw new Error(error.message)
   revalidatePath('/dashboard')

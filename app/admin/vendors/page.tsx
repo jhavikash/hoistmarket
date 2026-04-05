@@ -93,7 +93,7 @@ export default function AdminVendorsPage() {
   const handleApprove = async (vendor: Vendor) => {
     const { error } = await supabase
       .from('vendors')
-      .update({ verified: true, admin_notes: adminNotes || vendor.admin_notes } as any)
+      .update({ verified: true, admin_notes: adminNotes || vendor.admin_notes })
       .eq('id', vendor.id)
     if (error) { toast.error(error.message); return }
 
@@ -105,7 +105,7 @@ export default function AdminVendorsPage() {
         title: 'Your listing is now Verified!',
         message: `${vendor.company_name} has been verified on HoistMarket. You will now receive matched RFQs from buyers in your region.`,
         data: { vendor_id: vendor.id },
-      } as any)
+      })
     }
 
     toast.success(`${vendor.company_name} approved and verified`)
@@ -117,7 +117,7 @@ export default function AdminVendorsPage() {
     if (!confirm(`Suspend ${vendor.company_name}? They will lose verified status and be hidden from directory.`)) return
     const { error } = await supabase
       .from('vendors')
-      .update({ is_active: false, verified: false, admin_notes: adminNotes || 'Suspended by admin' } as any)
+      .update({ is_active: false, verified: false, admin_notes: adminNotes || 'Suspended by admin' })
       .eq('id', vendor.id)
     if (error) { toast.error(error.message); return }
     toast.success(`${vendor.company_name} suspended`)
@@ -133,7 +133,7 @@ export default function AdminVendorsPage() {
       tier: newTier,
       featured: newTier === 'featured' || newTier === 'enterprise',
       membership_expires_at: newTier !== 'free' ? expiresAt.toISOString() : null,
-    } as any).eq('id', vendor.id)
+    }).eq('id', vendor.id)
 
     if (error) { toast.error(error.message); return }
 
@@ -155,7 +155,7 @@ export default function AdminVendorsPage() {
           status: 'active',
           starts_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
-        } as any)
+        })
       }
     }
 
@@ -168,7 +168,7 @@ export default function AdminVendorsPage() {
     setSaving(true)
     const { error } = await supabase
       .from('vendors')
-      .update({ admin_notes: adminNotes } as any)
+      .update({ admin_notes: adminNotes })
       .eq('id', vendor.id)
     setSaving(false)
     if (error) { toast.error(error.message); return }
@@ -494,7 +494,7 @@ export default function AdminVendorsPage() {
                     )}
                     {selected.verified && (
                       <button onClick={async () => {
-                        await supabase.from('vendors').update({ verified: false } as any).eq('id', selected.id)
+                        await supabase.from('vendors').update({ verified: false }).eq('id', selected.id)
                         toast.success('Verification removed')
                         load()
                         setSelected(p => p ? { ...p, verified: false } : null)
@@ -509,7 +509,7 @@ export default function AdminVendorsPage() {
                       </button>
                     ) : (
                       <button onClick={async () => {
-                        await supabase.from('vendors').update({ is_active: true } as any).eq('id', selected.id)
+                        await supabase.from('vendors').update({ is_active: true }).eq('id', selected.id)
                         toast.success('Vendor reactivated')
                         load()
                         setSelected(p => p ? { ...p, is_active: true } : null)

@@ -147,7 +147,7 @@ export default function AdminContentPage() {
       .update({
         is_published: !a.is_published,
         published_at: !a.is_published ? new Date().toISOString() : null,
-      } as any)
+      })
       .eq('id', a.id)
 
     if (error) { toast.error(error.message); return }

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -7,8 +8,6 @@ import {
 } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 
 interface PageProps {
@@ -16,7 +15,7 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createSupabaseServer()
   const { data: vendor } = await supabase
     .from('vendors')
     .select('company_name, description, city, country, equipment_categories')
@@ -34,7 +33,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export const revalidate = 600
 
 export default async function VendorProfilePage({ params }: PageProps) {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createSupabaseServer()
   const { data: vendor } = await supabase
     .from('vendors')
     .select('*')
@@ -45,7 +44,7 @@ export default async function VendorProfilePage({ params }: PageProps) {
   if (!vendor) notFound()
 
   // Increment view count (fire and forget)
-  supabase.from('vendors').update({ views_count: (vendor.views_count || 0) + 1 } as any).eq('id', vendor.id)
+  supabase.from('vendors').update({ views_count: (vendor.views_count || 0) + 1 }).eq('id', vendor.id)
 
   const schema = {
     '@context': 'https://schema.org',

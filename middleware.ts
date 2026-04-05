@@ -1,80 +1,66 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+  let res = NextResponse.next({ request: req })
 
-  // Refresh session if expired
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return req.cookies.getAll() },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value))
+          res = NextResponse.next({ request: req })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            res.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
 
+  // Refresh session
+  const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = req.nextUrl
 
-  // ── ADMIN PROTECTION ──────────────────────────────────────────
+  // ── Admin protection ───────────────────────────────────────
   if (pathname.startsWith('/admin')) {
-    if (!session) {
-      const redirectUrl = new URL('/login', req.url)
-      redirectUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(redirectUrl)
+    if (!user) {
+      const url = new URL('/login', req.url)
+      url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
     }
-
-    // Check admin role
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-
+      .from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role !== 'admin') {
-      // Not admin — redirect to home with error
       return NextResponse.redirect(new URL('/?error=unauthorized', req.url))
     }
   }
 
-  // ── DASHBOARD PROTECTION ──────────────────────────────────────
-  if (pathname.startsWith('/dashboard')) {
-    if (!session) {
-      const redirectUrl = new URL('/login', req.url)
-      redirectUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(redirectUrl)
+  // ── Dashboard & vendor portal protection ─────────────────
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/vendor/portal')) {
+    if (!user) {
+      const url = new URL('/login', req.url)
+      url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
     }
   }
 
-  // ── VENDOR PORTAL PROTECTION ─────────────────────────────────
-  if (pathname.startsWith('/vendor/portal')) {
-    if (!session) {
-      const redirectUrl = new URL('/login', req.url)
-      redirectUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(redirectUrl)
-    }
-  }
-
-  // ── REDIRECT LOGGED-IN USERS FROM LOGIN PAGE ─────────────────
-  if (pathname === '/login' && session) {
-    // Check role for redirect destination
+  // ── Redirect logged-in users away from /login ─────────────
+  if (pathname === '/login' && user) {
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-
-    if (profile?.role === 'admin') {
-      return NextResponse.redirect(new URL('/admin', req.url))
-    }
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+      .from('profiles').select('role').eq('id', user.id).single()
+    return NextResponse.redirect(
+      new URL(profile?.role === 'admin' ? '/admin' : '/dashboard', req.url)
+    )
   }
 
   return res
 }
 
 export const config = {
-  matcher: [
-    '/admin/:path*',
-    '/dashboard/:path*',
-    '/vendor/portal/:path*',
-    '/login',
-  ],
+  matcher: ['/admin/:path*', '/dashboard/:path*', '/vendor/portal/:path*', '/login'],
 }

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import Link from 'next/link'
 import { ArrowRight, MapPin, Zap, CheckCircle, Clock, Shield } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 
@@ -89,10 +89,8 @@ const EQUIPMENT_TYPES = [
   { name: 'Rigging & Slings', icon: '🔗', capacity: 'WLL up to 1,000t', href: '/equipment/rigging' },
 ]
 
-async function getFeaturedRentalVendors() {
-  const { createServerComponentClient } = await import('@supabase/auth-helpers-nextjs')
-  const { cookies } = await import('next/headers')
-  const supabase = createServerComponentClient({ cookies })
+async function getFeaturedRentalVendors() {  const { cookies } = await import('next/headers')
+  const supabase = await createSupabaseServer()
   const { data } = await supabase
     .from('vendors')
     .select('id, company_name, slug, city, country, equipment_categories, verified, tier, logo_url')
@@ -104,7 +102,7 @@ async function getFeaturedRentalVendors() {
 }
 
 export default async function RentalsPage() {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createSupabaseServer()
   const featuredVendors = await getFeaturedRentalVendors()
 
   return (

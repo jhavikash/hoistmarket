@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import Link from 'next/link'
 import { 
   ArrowRight, Zap, BookOpen, Users, TrendingUp, Shield, 
@@ -6,8 +7,6 @@ import {
 } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 
 export const metadata: Metadata = {
@@ -42,10 +41,7 @@ const newsItems = [
   { tag: 'Safety', date: 'Mar 11', title: 'LEEA Revises Wire Rope Inspection Intervals for High-Cycle Applications' },
 ]
 
-async function getFeaturedVendors() {
-  const { createServerComponentClient } = await import('@supabase/auth-helpers-nextjs')
-  const { cookies } = await import('next/headers')
-  const supabase = createServerComponentClient({ cookies })
+async function getFeaturedVendors() {  const supabase = await createSupabaseServer()
   const { data } = await supabase
     .from('vendors')
     .select('id, company_name, slug, city, country, equipment_categories, tier, verified, featured, description, logo_url')
@@ -55,10 +51,7 @@ async function getFeaturedVendors() {
   return data || []
 }
 
-async function getFeaturedArticles() {
-  const { createServerComponentClient } = await import('@supabase/auth-helpers-nextjs')
-  const { cookies } = await import('next/headers')
-  const supabase = createServerComponentClient({ cookies })
+async function getFeaturedArticles() {  const supabase = await createSupabaseServer()
   const { data } = await supabase
     .from('articles')
     .select('id, slug, title, excerpt, category, reading_time, is_featured, published_at')
@@ -70,7 +63,7 @@ async function getFeaturedArticles() {
 }
 
 export default async function HomePage() {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createSupabaseServer()
   const [vendors, articles] = await Promise.all([getFeaturedVendors(), getFeaturedArticles()])
 
   return (

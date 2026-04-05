@@ -115,7 +115,7 @@ export default function AdminRevenuePage() {
   }
 
   const updateMembershipStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from('memberships').update({ status } as any).eq('id', id)
+    const { error } = await supabase.from('memberships').update({ status }).eq('id', id)
     if (error) { toast.error(error.message); return }
     toast.success('Membership updated')
     loadData()

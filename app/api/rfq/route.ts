@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
@@ -32,7 +31,7 @@ function scoreVendor(v: V, cat: string, region: string): number {
 // POST — submit new RFQ
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const body = await req.json()
     if (!body.requester_name || !body.requester_email || !body.equipment_category || !body.site_region) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -52,7 +51,7 @@ export async function POST(req: NextRequest) {
       rental_duration: body.rental_duration ?? null, project_description: body.project_description ?? null,
       budget_range: body.budget_range ?? null, special_requirements: body.special_requirements ?? null,
       urgency: body.urgency ?? 'medium', status: 'new', source: 'website',
-    } as any).select('id, rfq_number').single()
+    }).select('id, rfq_number').single()
 
     if (re) return NextResponse.json({ error: re.message }, { status: 500 })
 
@@ -71,7 +70,7 @@ export async function POST(req: NextRequest) {
         .slice(0, 5)
       matchedIds = scored.map(v => v.id)
       if (matchedIds.length > 0) {
-        await supabase.from('rfqs').update({ matched_vendor_ids: matchedIds, status: 'matched' } as any).eq('id', rfq.id)
+        await supabase.from('rfqs').update({ matched_vendor_ids: matchedIds, status: 'matched' }).eq('id', rfq.id)
       }
     }
 
@@ -104,7 +103,7 @@ export async function POST(req: NextRequest) {
 // GET — list RFQs
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
@@ -124,7 +123,7 @@ export async function GET(req: NextRequest) {
 // PUT — admin dispatch + status updates
 export async function PUT(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
@@ -145,7 +144,7 @@ export async function PUT(req: NextRequest) {
       status: 'dispatched', dispatched_to: vendorIds,
       dispatched_at: new Date().toISOString(),
       dispatch_message: message ?? null, commission_status: 'expected',
-    } as any).eq('id', rfqId)
+    }).eq('id', rfqId)
 
     const { data: rfq } = await supabase.from('rfqs')
       .select('rfq_number, requester_name, equipment_category, site_region, required_capacity, urgency, project_description')
@@ -169,7 +168,7 @@ export async function PUT(req: NextRequest) {
           title: `New RFQ: ${rfq?.equipment_category}`,
           message: `You have a new RFQ for ${rfq?.equipment_category} in ${rfq?.site_region}. Log in to view and respond.`,
           data: { rfq_id: rfqId, rfq_number: rfq?.rfq_number },
-        } as any)
+        })
       }
 
       // Send dispatch email to vendor

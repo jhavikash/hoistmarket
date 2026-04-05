@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createHmac } from 'crypto'
@@ -16,7 +15,7 @@ const PLANS = {
 // POST /api/payments — create Razorpay order
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Must be signed in' }, { status: 401 })
 
@@ -77,7 +76,7 @@ export async function POST(req: NextRequest) {
 // PUT /api/payments — verify payment & activate membership
 export async function PUT(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -114,7 +113,7 @@ export async function PUT(req: NextRequest) {
       status: 'active',
       starts_at: new Date().toISOString(),
       expires_at: expiresAt.toISOString(),
-    } as any)
+    })
     if (mErr) return NextResponse.json({ error: mErr.message }, { status: 500 })
 
     // Upgrade vendor tier
@@ -122,7 +121,7 @@ export async function PUT(req: NextRequest) {
       tier: plan.tier,
       featured: plan.tier === 'featured' || plan.tier === 'enterprise',
       membership_expires_at: expiresAt.toISOString(),
-    } as any).eq('id', vendorId)
+    }).eq('id', vendorId)
     if (vErr) return NextResponse.json({ error: vErr.message }, { status: 500 })
 
     // Notify vendor

@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createSupabaseServer } from '@/lib/supabaseServer'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
@@ -7,7 +6,7 @@ import type { Database } from '@/types/database'
 // GET /api/articles — search and filter articles
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const url = new URL(req.url)
     const q        = url.searchParams.get('q') ?? ''
     const category = url.searchParams.get('category') ?? ''
@@ -44,7 +43,7 @@ export async function GET(req: NextRequest) {
 // POST /api/articles — create article (admin only)
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -59,7 +58,7 @@ export async function POST(req: NextRequest) {
       const { data, error } = await supabase.from('articles').update({
         ...fields,
         published_at: fields.is_published && !fields.published_at ? new Date().toISOString() : fields.published_at,
-      } as any).eq('id', id).select('id, slug').single()
+      }).eq('id', id).select('id, slug').single()
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       return NextResponse.json({ success: true, ...data })
     } else {
@@ -68,7 +67,7 @@ export async function POST(req: NextRequest) {
         ...fields,
         author_id: user.id,
         published_at: fields.is_published ? new Date().toISOString() : null,
-      } as any).select('id, slug').single()
+      }).select('id, slug').single()
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       return NextResponse.json({ success: true, ...data }, { status: 201 })
     }
@@ -80,7 +79,7 @@ export async function POST(req: NextRequest) {
 // DELETE /api/articles?id=xxx — delete article (admin only)
 export async function DELETE(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient<Database>({ cookies })
+    const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
